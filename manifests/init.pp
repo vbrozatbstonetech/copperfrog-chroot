@@ -15,7 +15,6 @@ class chroot::install (
   $chroot_dir,
 ) {
   # Copperfrog specific. Makes sure the basic Linux configuration is existing.
-  #require ( 'linux' )
   File {
     ensure => directory,
     owner => root,
@@ -36,7 +35,6 @@ class chroot::install (
         "debootstrap",
       ] :
         ensure => present,
-        require => Class [ "linux" ],
       }
       # This creates the chroot group
       group { $group :
@@ -93,7 +91,7 @@ define chroot::configure::create_user (
     key => $ssh_key,
     type => $ssh_type,
     user => $name,
-    require => [ Class [ 'linux' ], User [ $name ] ],
+    require => [ User [ $name ] ],
   }
   # Now create the same user in the chroot environment.
   exec { "create-chroot-user-${name}" :
@@ -275,8 +273,6 @@ class chroot::configure (
       "set Match[Condition/Group = \"${group}\"]/Settings/ChrootDirectory \"${chroot_dir}\"",
       "set Match[Condition/Group = \"${group}\"]/Settings/AllowTcpForwarding no",
     ],
-    # Copperfrog specific. Makes sure the SSH server is running/restarted.
-    #notify => Service [ $linux::service::sshd_svc ],
   }
   # This configures schroot for a basic 'lucid' configuration when debootstrap
   # is run.
