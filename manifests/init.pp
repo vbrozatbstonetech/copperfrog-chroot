@@ -294,6 +294,7 @@ class chroot::configure (
     path => "/bin:/sbin:/usr/bin:/usr/sbin",
     command => "debootstrap --variant=buildd --arch ${chroot_os_arch} ${chroot_os} ${chroot_dir} ${chroot_os_mirror}",
     creates => "${chroot_dir}/etc/apt/sources.list",
+    timeout => -1,
     require => Augeas [ "schroot-${chroot_os}-config" ],
   }
   # Make sure the proc file system is bind-mounted in the chroot environment.
