@@ -216,23 +216,26 @@ define chroot::configure::install_app (
   Exec {
     path => "/bin:/sbin:/usr/bin:/usr/sbin",
     command => "chroot ${chroot_dir} apt-get -y install ${name}",
-    require => Exec [ "configure-${chroot_os}" ],
+    require => [ File ["${chroot_dir}/etc/resolv.conf"], Exec [ "configure-${chroot_os}" ] ],
   }
   # Was $creates defined?
   if $creates != 'none' {
     exec { "install-app-${chroot_os}-${name}" :
       creates => $creates,
+      require => [ File ["${chroot_dir}/etc/resolv.conf"], Exec [ "configure-${chroot_os}" ] ],
     }
   # Was $unless defined?
   } elsif $unless != 'none' {
     exec { "install-app-${chroot_os}-${name}" :
       unless => $unless,
+      require => [ File ["${chroot_dir}/etc/resolv.conf"], Exec [ "configure-${chroot_os}" ] ],
     }
   # We fallback to asking the package manager inside the chroot environment
   # if the package is installed.
   } else {
     exec { "install-app-${chroot_os}-${name}" :
       unless => "chroot ${chroot_dir} dpkg --list | grep \"${name} \"",
+      require => [ File ["${chroot_dir}/etc/resolv.conf"], Exec [ "configure-${chroot_os}" ] ],
     }
   }
 }
@@ -322,7 +325,11 @@ class chroot::configure (
   }
   # Copies the resolv configuration from host to chroot environment.
   file { "${chroot_dir}/etc/resolv.conf" :
-    source => "puppet:///modules/linux/resolv.conf",
+    source => "/etc/resolv.conf",
+    mode => 644,
+    owner => root,
+    group => root,
+    ensure => file;
   }
   # Copies the package manager configuration from host to chroot environment.
   file { "${chroot_dir}/etc/apt/sources.list" :
